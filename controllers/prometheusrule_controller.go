@@ -25,21 +25,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	monitoringv1 "github.com/bolindalabs/cortex-alert-operator/api/v1"
+	"github.com/bolindalabs/cortex-alert-operator/controllers/cortex"
 )
+
+const finalizerName = "prometheus.monitoring.bolinda.digital"
 
 // PrometheusRuleReconciler reconciles a PrometheusRule object
 type PrometheusRuleReconciler struct {
 	client.Client
 	Log    logr.Logger
 	Scheme *runtime.Scheme
+
+	cortex cortex.Client
 }
 
 // +kubebuilder:rbac:groups=monitoring.bolinda.digital,resources=prometheusrules,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitoring.bolinda.digital,resources=prometheusrules/status,verbs=get;update;patch
 
 func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	const finalizerName = "prometheus.monitoring.bolinda.digital"
-
 	ctx := context.Background()
 	log := r.Log.WithValues("prometheusrule", req.NamespacedName)
 
@@ -52,37 +55,32 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	// finalizer logic
-	// examine DeletionTimestamp to determine if object is under deletion
-	if rule.ObjectMeta.DeletionTimestamp.IsZero() {
-		// The object is not being deleted, so if it does not have our finalizer,
-		// then lets add the finalizer and update the object. This is equivalent
-		// registering our finalizer.
-		if !containsString(rule.ObjectMeta.Finalizers, finalizerName) {
-			rule.ObjectMeta.Finalizers = append(rule.ObjectMeta.Finalizers, finalizerName)
-			if err := r.Update(context.Background(), &rule); err != nil {
-				return ctrl.Result{}, err
-			}
+	cortexNamespace := rule.Namespace + "--" + rule.Name
+
+	if !r.hasFinalizer(rule) && !r.isDeletionScheduled(rule) {
+		if err := r.addFinalizer(rule); err != nil {
+			log.Error(err, "unable to add finalizer")
+			return ctrl.Result{}, err
+		}
+	}
+
+	if r.isDeletionScheduled(rule) {
+		if err := r.cortex.DeleteRuleNamespace(cortexNamespace); err != nil {
+			log.Error(err, "unable to delete rule namespace")
+			return ctrl.Result{}, err
+		}
+
+		if err := r.removeFinalizer(rule); err != nil {
+			log.Error(err, "unable to remove finalizer")
+			return ctrl.Result{}, err
 		}
 	} else {
-		// The object is being deleted
-		if containsString(rule.ObjectMeta.Finalizers, finalizerName) {
-			// our finalizer is present, so lets handle any external dependency
-			if err := r.deleteExternalResources(&rule); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				return ctrl.Result{}, err
-			}
-
-			// remove our finalizer from the list and update it.
-			rule.ObjectMeta.Finalizers = removeString(rule.ObjectMeta.Finalizers, finalizerName)
-			if err := r.Update(context.Background(), &rule); err != nil {
+		for _, g := range rule.Spec.Groups {
+			if err := r.cortex.SetRuleGroup(cortexNamespace, g); err != nil {
+				log.Error(err, "unable to set rule group")
 				return ctrl.Result{}, err
 			}
 		}
-
-		// Stop reconciliation as the item is being deleted
-		return ctrl.Result{}, nil
 	}
 
 	rule.Status.SyncStatus = "Synced"
@@ -91,6 +89,32 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *PrometheusRuleReconciler) hasFinalizer(rule monitoringv1.PrometheusRule) bool {
+	return containsString(rule.ObjectMeta.Finalizers, finalizerName)
+}
+
+func (r *PrometheusRuleReconciler) isDeletionScheduled(rule monitoringv1.PrometheusRule) bool {
+	return !rule.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+func (r *PrometheusRuleReconciler) removeFinalizer(rule monitoringv1.PrometheusRule) error {
+	rule.ObjectMeta.Finalizers = removeString(rule.ObjectMeta.Finalizers, finalizerName)
+	if err := r.Update(context.Background(), &rule); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *PrometheusRuleReconciler) addFinalizer(rule monitoringv1.PrometheusRule) error {
+	rule.ObjectMeta.Finalizers = append(rule.ObjectMeta.Finalizers, finalizerName)
+	if err := r.Update(context.Background(), &rule); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *PrometheusRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
