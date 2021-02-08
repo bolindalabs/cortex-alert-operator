@@ -1,0 +1,65 @@
+
+builds:
+  -
+    binary: cortex-alert-operator
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+#dockers:
+#  -
+#    binaries:
+#      - cortex-alert-operator
+#    build_flag_templates:
+#      - "--pull"
+#      - "--label=org.opencontainers.image.created={{.Date}}"
+#      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+#      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+#      - "--label=org.opencontainers.image.version={{.Version}}"
+#    image_templates:
+#      - "quay.io/bolinda/cortex-alert-operator:{{ .Tag }}"
+#      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}"
+#      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}.{{ .Minor }}"
+#      - "quay.io/bolinda/cortex-alert-operator:latest"
+
+dockers:
+  - image_templates:
+      - "quay.io/bolinda/cortex-alert-operator:{{ .Version }}-amd64"
+      - "quay.io/bolinda/cortex-alert-operator:{{ .Tag }}-amd64"
+      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}-amd64"
+      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "quay.io/bolinda/cortex-alert-operator:latest-amd64"
+    use_buildx: true
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+  - image_templates:
+      - "quay.io/bolinda/cortex-alert-operator:{{ .Version }}-arm64v8"
+      - "quay.io/bolinda/cortex-alert-operator:{{ .Tag }}-arm64v8"
+      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}-arm64v8"
+      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}.{{ .Minor }}-arm64v8"
+      - "quay.io/bolinda/cortex-alert-operator:latest-arm64v8"
+    use_buildx: true
+    goarch: arm64
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/arm64/v8"
+docker_manifests:
+  - name_template: quay.io/bolinda/cortex-alert-operator:{{ .Version }}
+    image_templates:
+      - quay.io/bolinda/cortex-alert-operator:{{ .Version }}-amd64
+      - quay.io/bolinda/cortex-alert-operator:{{ .Version }}-arm64v8
