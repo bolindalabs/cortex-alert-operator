@@ -48,11 +48,15 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 
 	var rule monitoringv1.PrometheusRule
 	if err := r.Get(ctx, req.NamespacedName, &rule); err != nil {
-		log.Error(err, "unable to fetch PrometheusRule")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		if client.IgnoreNotFound(err) == nil {
+			return ctrl.Result{}, nil
+		}
+
+		log.Error(err, "unable to fetch PrometheusRule")
+		return ctrl.Result{}, err
 	}
 
 	cortexNamespace := rule.Namespace + "--" + rule.Name
@@ -83,10 +87,10 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		}
 	}
 
-	rule.Status.SyncStatus = "Synced"
-	if err := r.Status().Update(context.Background(), &rule); err != nil {
-		return ctrl.Result{}, err
-	}
+	// rule.Status.SyncStatus = "Synced"
+	// if err := r.Status().Update(ctx, &rule); err != nil {
+	// 	return ctrl.Result{}, err
+	// }
 
 	return ctrl.Result{}, nil
 }
@@ -100,6 +104,9 @@ func (r *PrometheusRuleReconciler) isDeletionScheduled(rule monitoringv1.Prometh
 }
 
 func (r *PrometheusRuleReconciler) removeFinalizer(rule monitoringv1.PrometheusRule) error {
+	log := r.Log.WithValues("prometheusrule", rule.Namespace+"/"+rule.Name)
+	log.Info("Removing finalizer")
+
 	rule.ObjectMeta.Finalizers = removeString(rule.ObjectMeta.Finalizers, finalizerName)
 	if err := r.Update(context.Background(), &rule); err != nil {
 		return err
@@ -109,6 +116,9 @@ func (r *PrometheusRuleReconciler) removeFinalizer(rule monitoringv1.PrometheusR
 }
 
 func (r *PrometheusRuleReconciler) addFinalizer(rule monitoringv1.PrometheusRule) error {
+	log := r.Log.WithValues("prometheusrule", rule.Namespace+"/"+rule.Name)
+	log.Info("Adding finalizer")
+
 	rule.ObjectMeta.Finalizers = append(rule.ObjectMeta.Finalizers, finalizerName)
 	if err := r.Update(context.Background(), &rule); err != nil {
 		return err

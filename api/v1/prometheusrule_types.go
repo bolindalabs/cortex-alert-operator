@@ -29,9 +29,9 @@ type PrometheusRuleSpec struct {
 
 // RuleGroup is a list of sequentially evaluated recording and alerting rules.
 type RuleGroup struct {
-	Name     string `json:"name" yaml:"name"`
-	Interval string `json:"interval,omitempty" yaml:"interval,omitempty"`
-	Rules    []Rule `json:"rules" yaml:"rules"`
+	Name     string `json:"name" `
+	Interval string `json:"interval,omitempty"`
+	Rules    []Rule `json:"rules"`
 }
 
 // Rule describes an alerting or recording rule.

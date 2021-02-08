@@ -3,7 +3,7 @@ package cortex
 import (
 	"net/url"
 
-	"gopkg.in/yaml.v3"
+	"github.com/ghodss/yaml"
 
 	v1 "github.com/bolindalabs/cortex-alert-operator/api/v1"
 )
