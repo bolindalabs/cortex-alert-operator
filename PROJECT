@@ -1,0 +1,7 @@
+domain: bolinda.digital
+repo: github.com/bolindalabs/cortex-alert-operator
+resources:
+- group: monitoring
+  kind: PrometheusRule
+  version: v1
+version: "2"

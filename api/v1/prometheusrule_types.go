@@ -1,0 +1,75 @@
+/*
+
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package v1
+
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
+
+// PrometheusRuleSpec contains specification parameters for a Rule.
+type PrometheusRuleSpec struct {
+	// Content of Prometheus rule file
+	Groups []RuleGroup `json:"groups,omitempty"`
+}
+
+// RuleGroup is a list of sequentially evaluated recording and alerting rules.
+type RuleGroup struct {
+	Name                    string `json:"name"`
+	Interval                string `json:"interval,omitempty"`
+	Rules                   []Rule `json:"rules"`
+	PartialResponseStrategy string `json:"partial_response_strategy,omitempty"`
+}
+
+// Rule describes an alerting or recording rule.
+type Rule struct {
+	Record      string             `json:"record,omitempty"`
+	Alert       string             `json:"alert,omitempty"`
+	Expr        intstr.IntOrString `json:"expr"`
+	For         string             `json:"for,omitempty"`
+	Labels      map[string]string  `json:"labels,omitempty"`
+	Annotations map[string]string  `json:"annotations,omitempty"`
+}
+
+// PrometheusRuleStatus defines the observed state of PrometheusRule
+type PrometheusRuleStatus struct {
+	SyncStatus string `json:"sync_status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// PrometheusRule is the Schema for the prometheusrules API
+type PrometheusRule struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   PrometheusRuleSpec   `json:"spec,omitempty"`
+	Status PrometheusRuleStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// PrometheusRuleList contains a list of PrometheusRule
+type PrometheusRuleList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []PrometheusRule `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&PrometheusRule{}, &PrometheusRuleList{})
+}

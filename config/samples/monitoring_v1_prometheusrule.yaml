@@ -1,0 +1,30 @@
+apiVersion: monitoring.bolinda.digital/v1
+kind: PrometheusRule
+metadata:
+  name: prometheusrule-sample
+spec:
+  groups:
+    - name: cloudwatch-pricing
+      interval: 5m
+      rules:
+        - record: cloudwatch:requests_per_action:sum
+          expr: "sum(increase(cloudwatch_requests_total[1h])) by(action)"
+
+    - name: SQS
+      rules:
+        - alert: MessagesToOld
+          expr: "avg by (queue_name) (aws_sqs_approximate_age_of_oldest_message_average offset 10m) > 3600"
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            team: engine
+            summary: "SQS Queue {{ $labels.queue_name }} has messages older than 1h."
+        - alert: DlqHasMessages
+          expr: "avg(aws_sqs_approximate_number_of_messages_visible_average offset 15m * on (queue_name) group_right() aws_resource_info{tag_Type=\"dlq\"} offset 15m) by(queue_name) > 0"
+          for: 8m
+          labels:
+            severity: warning
+          annotations:
+            team: engine
+            summary: "SQS Deadletterqueue {{ $labels.queue_name }} received {{ $value }} messages."
