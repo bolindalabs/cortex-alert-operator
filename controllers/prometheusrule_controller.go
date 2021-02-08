@@ -36,7 +36,7 @@ type PrometheusRuleReconciler struct {
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 
-	cortex cortex.Client
+	Cortex *cortex.Client
 }
 
 // +kubebuilder:rbac:groups=monitoring.bolinda.digital,resources=prometheusrules,verbs=get;list;watch;create;update;patch;delete
@@ -65,7 +65,7 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 	}
 
 	if r.isDeletionScheduled(rule) {
-		if err := r.cortex.DeleteRuleNamespace(cortexNamespace); err != nil {
+		if err := r.Cortex.DeleteRuleNamespace(cortexNamespace); err != nil {
 			log.Error(err, "unable to delete rule namespace")
 			return ctrl.Result{}, err
 		}
@@ -76,7 +76,7 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		}
 	} else {
 		for _, g := range rule.Spec.Groups {
-			if err := r.cortex.SetRuleGroup(cortexNamespace, g); err != nil {
+			if err := r.Cortex.SetRuleGroup(cortexNamespace, g); err != nil {
 				log.Error(err, "unable to set rule group")
 				return ctrl.Result{}, err
 			}
