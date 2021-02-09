@@ -20,6 +20,8 @@ import (
 	"flag"
 	"os"
 
+	uzap "go.uber.org/zap"
+	uzapcore "go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -59,7 +61,8 @@ func main() {
 	flag.StringVar(&cortexToken, "cortex-token", "", "Cortex API Token.")
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	level := uzap.NewAtomicLevelAt(uzapcore.DebugLevel)
+	ctrl.SetLogger(zap.New(zap.UseDevMode(false), zap.Level(&level)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,

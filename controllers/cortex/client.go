@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/go-logr/logr"
 )
 
 const (
@@ -55,7 +57,7 @@ func New(cfg Config) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) doRequest(path, method string, payload []byte) (*http.Response, error) {
+func (c *Client) doRequest(log logr.Logger, path, method string, payload []byte) (*http.Response, error) {
 	req, err := buildRequest(path, method, *c.endpoint, payload)
 	if err != nil {
 		return nil, err
@@ -67,10 +69,10 @@ func (c *Client) doRequest(path, method string, payload []byte) (*http.Response,
 
 	req.Header.Add("X-Scope-OrgID", c.id)
 
-	// log.WithFields(log.Fields{
-	// 	"url":    req.URL.String(),
-	// 	"method": req.Method,
-	// }).Debugln("sending request to cortex api")
+	log.WithValues(
+		"url", req.URL.String(),
+		"method", req.Method,
+	).Info("sending request to cortex api")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
@@ -82,7 +84,7 @@ func (c *Client) doRequest(path, method string, payload []byte) (*http.Response,
 		return nil, err
 	}
 
-	err = checkResponse(resp)
+	err = checkResponse(log, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -91,10 +93,10 @@ func (c *Client) doRequest(path, method string, payload []byte) (*http.Response,
 }
 
 // checkResponse checks the API response for errors
-func checkResponse(r *http.Response) error {
-	// log.WithFields(log.Fields{
-	// 	"status": r.Status,
-	// }).Debugln("checking response")
+func checkResponse(log logr.Logger, r *http.Response) error {
+	log.WithValues(
+		"status", r.Status,
+	).Info("checking response")
 	if 200 <= r.StatusCode && r.StatusCode <= 299 {
 		return nil
 	}
@@ -112,19 +114,20 @@ func checkResponse(r *http.Response) error {
 	}
 
 	if r.StatusCode == http.StatusNotFound {
-		// log.WithFields(log.Fields{
-		// 	"status": r.Status,
-		// 	"msg":    msg,
-		// }).Debugln(errMsg)
+		log.WithValues(
+			"status", r.Status,
+			"msg", msg,
+		).Info(errMsg)
 		return ErrResourceNotFound
 	}
 
-	// log.WithFields(log.Fields{
-	// 	"status": r.Status,
-	// 	"msg":    msg,
-	// }).Errorln(errMsg)
+	err := errors.New(errMsg)
+	log.WithValues(
+		"status", r.Status,
+		"msg", msg,
+	).Error(err, "cortex request failed")
 
-	return errors.New(errMsg)
+	return err
 }
 
 func buildRequest(p, m string, endpoint url.URL, payload []byte) (*http.Request, error) {
