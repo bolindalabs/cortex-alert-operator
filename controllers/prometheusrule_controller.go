@@ -62,7 +62,7 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 	cortexNamespace := rule.Namespace + "--" + rule.Name
 
 	if !r.hasFinalizer(rule) && !r.isDeletionScheduled(rule) {
-		if err := r.addFinalizer(rule); err != nil {
+		if err := r.addFinalizer(ctx, rule, log); err != nil {
 			log.Error(err, "unable to add finalizer")
 			return ctrl.Result{}, err
 		}
@@ -74,7 +74,7 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 			return ctrl.Result{}, err
 		}
 
-		if err := r.removeFinalizer(rule); err != nil {
+		if err := r.removeFinalizer(ctx, rule, log); err != nil {
 			log.Error(err, "unable to remove finalizer")
 			return ctrl.Result{}, err
 		}
@@ -87,10 +87,11 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		}
 	}
 
-	// rule.Status.SyncStatus = "Synced"
-	// if err := r.Status().Update(ctx, &rule); err != nil {
-	// 	return ctrl.Result{}, err
-	// }
+	newRule := rule.DeepCopy()
+	newRule.Status.SyncStatus = "Synced"
+	if err := r.Patch(ctx, newRule, client.MergeFrom(&rule)); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -103,24 +104,24 @@ func (r *PrometheusRuleReconciler) isDeletionScheduled(rule monitoringv1.Prometh
 	return !rule.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
-func (r *PrometheusRuleReconciler) removeFinalizer(rule monitoringv1.PrometheusRule) error {
-	log := r.Log.WithValues("prometheusrule", rule.Namespace+"/"+rule.Name)
+func (r *PrometheusRuleReconciler) removeFinalizer(ctx context.Context, rule monitoringv1.PrometheusRule, log logr.Logger) error {
 	log.Info("Removing finalizer")
 
-	rule.ObjectMeta.Finalizers = removeString(rule.ObjectMeta.Finalizers, finalizerName)
-	if err := r.Update(context.Background(), &rule); err != nil {
+	newRule := rule.DeepCopy()
+	newRule.ObjectMeta.Finalizers = removeString(rule.ObjectMeta.Finalizers, finalizerName)
+	if err := r.Patch(ctx, newRule, client.MergeFrom(&rule)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *PrometheusRuleReconciler) addFinalizer(rule monitoringv1.PrometheusRule) error {
-	log := r.Log.WithValues("prometheusrule", rule.Namespace+"/"+rule.Name)
+func (r *PrometheusRuleReconciler) addFinalizer(ctx context.Context, rule monitoringv1.PrometheusRule, log logr.Logger) error {
 	log.Info("Adding finalizer")
 
-	rule.ObjectMeta.Finalizers = append(rule.ObjectMeta.Finalizers, finalizerName)
-	if err := r.Update(context.Background(), &rule); err != nil {
+	newRule := rule.DeepCopy()
+	newRule.ObjectMeta.Finalizers = append(newRule.ObjectMeta.Finalizers, finalizerName)
+	if err := r.Patch(ctx, newRule, client.MergeFrom(&rule)); err != nil {
 		return err
 	}
 
