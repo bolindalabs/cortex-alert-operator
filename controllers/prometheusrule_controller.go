@@ -70,7 +70,7 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 	}
 
 	if r.isDeletionScheduled(rule) {
-		if err := r.Cortex.DeleteRuleNamespace(cortexNamespace); err != nil {
+		if err := r.Cortex.DeleteRuleNamespace(log, cortexNamespace); err != nil {
 			log.Error(err, "unable to delete rule namespace")
 			return ctrl.Result{}, err
 		}
@@ -81,7 +81,7 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 		}
 	} else {
 		for _, g := range rule.Spec.Groups {
-			if err := r.Cortex.SetRuleGroup(cortexNamespace, g); err != nil {
+			if err := r.Cortex.SetRuleGroup(log, cortexNamespace, g); err != nil {
 				log.Error(err, "unable to set rule group")
 
 				if err := r.setStatus(ctx, rule, fmt.Sprintf("unable to set rule group: %v", err)); err != nil {
