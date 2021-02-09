@@ -21,6 +21,8 @@ and to further investigate into supporting other naming schemes.
 ### Example
 ```yaml
 # original from: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md
+
+# change API Version from monitoring.coreos.com/v1 to monitoring.bolinda.digital/v1
 apiVersion: monitoring.bolinda.digital/v1
 kind: PrometheusRule
 metadata:
