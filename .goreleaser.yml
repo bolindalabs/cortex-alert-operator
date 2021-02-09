@@ -28,11 +28,7 @@ builds:
 
 dockers:
   - image_templates:
-      - "quay.io/bolinda/cortex-alert-operator:{{ .Version }}-amd64"
-      - "quay.io/bolinda/cortex-alert-operator:{{ .Tag }}-amd64"
-      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}-amd64"
-      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}.{{ .Minor }}-amd64"
-      - "quay.io/bolinda/cortex-alert-operator:latest-amd64"
+      - "quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-amd64"
     use_buildx: true
     dockerfile: Dockerfile
     build_flag_templates:
@@ -43,11 +39,7 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/amd64"
   - image_templates:
-      - "quay.io/bolinda/cortex-alert-operator:{{ .Version }}-arm64v8"
-      - "quay.io/bolinda/cortex-alert-operator:{{ .Tag }}-arm64v8"
-      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}-arm64v8"
-      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}.{{ .Minor }}-arm64v8"
-      - "quay.io/bolinda/cortex-alert-operator:latest-arm64v8"
+      - "quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-arm64v8"
     use_buildx: true
     goarch: arm64
     dockerfile: Dockerfile
@@ -59,7 +51,7 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/arm64/v8"
 docker_manifests:
-  - name_template: quay.io/bolinda/cortex-alert-operator:{{ .Version }}
+  - name_template: quay.io/bolinda/cortex-alert-operator:v{{ .Version }}
     image_templates:
-      - quay.io/bolinda/cortex-alert-operator:{{ .Version }}-amd64
-      - quay.io/bolinda/cortex-alert-operator:{{ .Version }}-arm64v8
+      - quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-amd64
+      - quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-arm64v8
