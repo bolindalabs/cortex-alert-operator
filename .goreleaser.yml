@@ -1,7 +1,5 @@
-
 builds:
-  -
-    binary: cortex-alert-operator
+  - binary: cortex-alert-operator
     env:
       - CGO_ENABLED=0
     goos:
@@ -9,22 +7,6 @@ builds:
     goarch:
       - amd64
       - arm64
-
-#dockers:
-#  -
-#    binaries:
-#      - cortex-alert-operator
-#    build_flag_templates:
-#      - "--pull"
-#      - "--label=org.opencontainers.image.created={{.Date}}"
-#      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-#      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-#      - "--label=org.opencontainers.image.version={{.Version}}"
-#    image_templates:
-#      - "quay.io/bolinda/cortex-alert-operator:{{ .Tag }}"
-#      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}"
-#      - "quay.io/bolinda/cortex-alert-operator:v{{ .Major }}.{{ .Minor }}"
-#      - "quay.io/bolinda/cortex-alert-operator:latest"
 
 dockers:
   - image_templates:
