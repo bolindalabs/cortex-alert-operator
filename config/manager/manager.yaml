@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - command:
-        - /manager
+        - /cortex-alert-operator
         args:
         - --enable-leader-election
         image: public.ecr.aws/bolindalabs/cortex-alert-operator:latest
