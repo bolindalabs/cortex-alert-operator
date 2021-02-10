@@ -18,6 +18,13 @@ With the current behavior, we map a Cortex namespace to a Kubernetes `{namespace
 We plan to allow custom namespace prefixes i.e. for use with different Kubernetes clusters
 and to further investigate into supporting other naming schemes.
 
+
+#### Known PoC limitations
+
+- Removing one or more rule groups without removing the whole `PrometheusRule` is not supported yet and results in them
+  not being deleted in Cortex.
+- Naming scheme as described above.
+
 ### Example
 ```yaml
 # original from: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/user-guides/alerting.md
