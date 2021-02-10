@@ -37,3 +37,7 @@ docker_manifests:
     image_templates:
       - public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}-amd64
       - public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}-arm64
+
+release:
+  extra_files:
+    - glob: ./config/crd/bases/*.yaml
