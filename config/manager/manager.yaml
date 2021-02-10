@@ -27,7 +27,7 @@ spec:
         - /manager
         args:
         - --enable-leader-election
-        image: controller:latest
+        image: public.ecr.aws/bolindalabs/cortex-alert-operator:latest
         name: manager
         resources:
           limits:
