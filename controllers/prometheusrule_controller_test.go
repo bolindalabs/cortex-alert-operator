@@ -6,8 +6,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/ghttp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/bolindalabs/cortex-alert-operator/api/v1"
 )
@@ -25,6 +27,13 @@ var _ = Describe("PrometheusRule Controller", func() {
 	Context("When creating PrometheusRule", func() {
 		It("Should call Cortex API with the right arguments", func() {
 			By("By applying a new PrometheusRule")
+			server.AppendHandlers(
+				ghttp.VerifyRequest("POST", "/api/v1/rules/default--test-prometheusrule"),
+			)
+			server.AppendHandlers(
+				ghttp.VerifyRequest("POST", "/api/v1/rules/default--test-prometheusrule"),
+			)
+
 			ctx := context.Background()
 			prometheusRule := &monitoringv1.PrometheusRule{
 				TypeMeta: metav1.TypeMeta{
@@ -36,7 +45,17 @@ var _ = Describe("PrometheusRule Controller", func() {
 					Namespace: PrometheusRuleNamespace,
 				},
 				Spec: monitoringv1.PrometheusRuleSpec{
-					Groups: []monitoringv1.RuleGroup{},
+					Groups: []monitoringv1.RuleGroup{
+						{
+							Name: "./example.rules",
+							Rules: []monitoringv1.Rule{
+								{
+									Alert: "ExampleAlert",
+									Expr:  intstr.FromString("vector(1)"),
+								},
+							},
+						},
+					},
 				},
 			}
 			Expect(k8sClient.Create(ctx, prometheusRule)).Should(Succeed())
@@ -48,6 +67,11 @@ var _ = Describe("PrometheusRule Controller", func() {
 				err := k8sClient.Get(ctx, prometheusRuleLookupKey, createdPrometheusRule)
 				return err == nil
 			}, timeout, interval).Should(BeTrue(), "PrometheusRule should be stored and retrievable from K8s")
+
+			Eventually(func() bool {
+				req := server.ReceivedRequests()
+				return len(req) > 0
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })

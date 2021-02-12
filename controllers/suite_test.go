@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/ghttp"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -16,6 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	monitoringv1 "github.com/bolindalabs/cortex-alert-operator/api/v1"
+	"github.com/bolindalabs/cortex-alert-operator/controllers/cortex"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -25,6 +27,8 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var server *ghttp.Server
+var prometheusRuleReconciler *PrometheusRuleReconciler
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -61,10 +65,26 @@ var _ = BeforeSuite(func(done Done) {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&PrometheusRuleReconciler{
+	// Initially load some cortexClient
+	var cortexClient *cortex.Client
+	{
+		c := cortex.Config{
+			Key:             "",
+			Address:         "",
+			ID:              "",
+			UseLegacyRoutes: false,
+		}
+		cortexClient, err = cortex.New(c)
+		Expect(err).ToNot(HaveOccurred())
+	}
+
+	prometheusRuleReconciler = &PrometheusRuleReconciler{
 		Client: k8sManager.GetClient(),
+		Cortex: cortexClient,
 		Log:    ctrl.Log.WithName("controllers").WithName("PrometheusRule"),
-	}).SetupWithManager(k8sManager)
+	}
+
+	err = prometheusRuleReconciler.SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
@@ -82,4 +102,23 @@ var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
+})
+
+// Start and Stop test server between each test run.
+var _ = BeforeEach(func() {
+	server = ghttp.NewServer()
+	c := cortex.Config{
+		Key:             "",
+		Address:         server.URL(),
+		ID:              "",
+		UseLegacyRoutes: false,
+	}
+	cortexClient, err := cortex.New(c)
+	Expect(err).ToNot(HaveOccurred())
+
+	prometheusRuleReconciler.Cortex = cortexClient
+})
+
+var _ = AfterEach(func() {
+	server.Close()
 })
