@@ -68,10 +68,10 @@ var _ = Describe("PrometheusRule Controller", func() {
 				return err == nil
 			}, timeout, interval).Should(BeTrue(), "PrometheusRule should be stored and retrievable from K8s")
 
-			Eventually(func() bool {
+			Eventually(func() int {
 				req := server.ReceivedRequests()
-				return len(req) > 0
-			}, timeout, interval).Should(BeTrue())
+				return len(req)
+			}, timeout, interval).Should(Equal(2)) // we want to come to 1 here, but have to implement caching for cortex API before
 		})
 	})
 })

@@ -46,24 +46,22 @@ func (r *PrometheusRuleReconciler) Reconcile(req ctrl.Request) (ctrl.Result, err
 
 	cortexNamespace := rule.Namespace + "--" + rule.Name
 
-	if !r.hasFinalizer(rule) && !r.isDeletionScheduled(rule) {
+	switch {
+	case !r.hasFinalizer(rule) && !r.isDeletionScheduled(rule):
 		if err := r.addFinalizer(ctx, rule, log); err != nil {
 			log.Error(err, "unable to add finalizer")
 			return ctrl.Result{}, err
 		}
-	}
-
-	if r.isDeletionScheduled(rule) {
+	case r.isDeletionScheduled(rule):
 		if err := r.Cortex.DeleteRuleNamespace(log, cortexNamespace); err != nil {
 			log.Error(err, "unable to delete rule namespace")
 			return ctrl.Result{}, err
 		}
-
 		if err := r.removeFinalizer(ctx, rule, log); err != nil {
 			log.Error(err, "unable to remove finalizer")
 			return ctrl.Result{}, err
 		}
-	} else {
+	default:
 		for _, g := range rule.Spec.Groups {
 			if err := r.Cortex.SetRuleGroup(log, cortexNamespace, g); err != nil {
 				log.Error(err, "unable to set rule group")
