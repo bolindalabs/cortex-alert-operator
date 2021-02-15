@@ -10,7 +10,7 @@ builds:
 
 dockers:
   - image_templates:
-      - "quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-amd64"
+      - "public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}-amd64"
     use_buildx: true
     dockerfile: Dockerfile
     build_flag_templates:
@@ -21,7 +21,7 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/amd64"
   - image_templates:
-      - "quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-arm64v8"
+      - "public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}-arm64"
     use_buildx: true
     goarch: arm64
     dockerfile: Dockerfile
@@ -33,7 +33,11 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
       - "--platform=linux/arm64/v8"
 docker_manifests:
-  - name_template: quay.io/bolinda/cortex-alert-operator:v{{ .Version }}
+  - name_template: public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}
     image_templates:
-      - quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-amd64
-      - quay.io/bolinda/cortex-alert-operator:v{{ .Version }}-arm64v8
+      - public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}-amd64
+      - public.ecr.aws/bolindalabs/cortex-alert-operator:v{{ .Version }}-arm64
+
+release:
+  extra_files:
+    - glob: ./config/crd/bases/*.yaml
