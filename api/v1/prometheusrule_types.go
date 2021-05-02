@@ -18,24 +18,35 @@ package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// PrometheusRuleSpec defines the desired state of PrometheusRule
+// PrometheusRuleSpec contains specification parameters for a Rule.
 type PrometheusRuleSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Content of Prometheus rule file
+	Groups []RuleGroup `json:"groups,omitempty"`
+}
 
-	// Foo is an example field of PrometheusRule. Edit prometheusrule_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+// RuleGroup is a list of sequentially evaluated recording and alerting rules.
+type RuleGroup struct {
+	Name     string `json:"name" `
+	Interval string `json:"interval,omitempty"`
+	Rules    []Rule `json:"rules"`
+}
+
+// Rule describes an alerting or recording rule.
+type Rule struct {
+	Record      string             `json:"record,omitempty"`
+	Alert       string             `json:"alert,omitempty"`
+	Expr        intstr.IntOrString `json:"expr"`
+	For         string             `json:"for,omitempty"`
+	Labels      map[string]string  `json:"labels,omitempty"`
+	Annotations map[string]string  `json:"annotations,omitempty"`
 }
 
 // PrometheusRuleStatus defines the observed state of PrometheusRule
 type PrometheusRuleStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	SyncStatus string `json:"sync_status,omitempty"`
 }
 
 //+kubebuilder:object:root=true

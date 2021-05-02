@@ -1,8 +1,8 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= public.ecr.aws/bolindalabs/cortex-alert-operator:latest
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+CRD_OPTIONS ?= "crd:trivialVersions=false,preserveUnknownFields=false"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
