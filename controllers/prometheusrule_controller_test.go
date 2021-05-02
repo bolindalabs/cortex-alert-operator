@@ -71,7 +71,7 @@ var _ = Describe("PrometheusRule Controller", func() {
 			Eventually(func() int {
 				req := server.ReceivedRequests()
 				return len(req)
-			}, timeout, interval).Should(Equal(1))
+			}, timeout, interval).Should(Equal(2))
 		})
 	})
 })
