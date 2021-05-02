@@ -1,13 +1,7 @@
 apiVersion: monitoring.bolinda.digital/v1
 kind: PrometheusRule
 metadata:
-  labels:
-    prometheus: example
-    role: alert-rules
-  name: prometheus-example-rules
+  name: prometheusrule-sample
 spec:
-  groups:
-    - name: ./example.rules
-      rules:
-        - alert: ExampleAlert
-          expr: vector(1)
+  # Add fields here
+  foo: bar

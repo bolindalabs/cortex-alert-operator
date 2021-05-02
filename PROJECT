@@ -1,7 +1,16 @@
 domain: bolinda.digital
+layout:
+- go.kubebuilder.io/v3
+projectName: alert-operator
 repo: github.com/bolindalabs/cortex-alert-operator
 resources:
-- group: monitoring
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: bolinda.digital
+  group: monitoring
   kind: PrometheusRule
+  path: github.com/bolindalabs/cortex-alert-operator/api/v1
   version: v1
-version: "2"
+version: "3"

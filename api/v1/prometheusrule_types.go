@@ -1,39 +1,45 @@
+/*
+Copyright 2021.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package v1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-// PrometheusRuleSpec contains specification parameters for a Rule.
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// PrometheusRuleSpec defines the desired state of PrometheusRule
 type PrometheusRuleSpec struct {
-	// Content of Prometheus rule file
-	Groups []RuleGroup `json:"groups,omitempty"`
-}
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 
-// RuleGroup is a list of sequentially evaluated recording and alerting rules.
-type RuleGroup struct {
-	Name     string `json:"name" `
-	Interval string `json:"interval,omitempty"`
-	Rules    []Rule `json:"rules"`
-}
-
-// Rule describes an alerting or recording rule.
-type Rule struct {
-	Record      string             `json:"record,omitempty"`
-	Alert       string             `json:"alert,omitempty"`
-	Expr        intstr.IntOrString `json:"expr"`
-	For         string             `json:"for,omitempty"`
-	Labels      map[string]string  `json:"labels,omitempty"`
-	Annotations map[string]string  `json:"annotations,omitempty"`
+	// Foo is an example field of PrometheusRule. Edit prometheusrule_types.go to remove/update
+	Foo string `json:"foo,omitempty"`
 }
 
 // PrometheusRuleStatus defines the observed state of PrometheusRule
 type PrometheusRuleStatus struct {
-	SyncStatus string `json:"sync_status,omitempty"`
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
 
 // PrometheusRule is the Schema for the prometheusrules API
 type PrometheusRule struct {
@@ -44,7 +50,7 @@ type PrometheusRule struct {
 	Status PrometheusRuleStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
 
 // PrometheusRuleList contains a list of PrometheusRule
 type PrometheusRuleList struct {
