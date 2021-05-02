@@ -71,7 +71,7 @@ var _ = Describe("PrometheusRule Controller", func() {
 			Eventually(func() int {
 				req := server.ReceivedRequests()
 				return len(req)
-			}, timeout, interval).Should(Equal(2)) // we want to come to 1 here, but have to implement caching for cortex API before
+			}, timeout, interval).Should(Equal(1))
 		})
 	})
 })

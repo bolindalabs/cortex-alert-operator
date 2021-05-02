@@ -33,6 +33,7 @@ import (
 
 	monitoringv1 "github.com/bolindalabs/cortex-alert-operator/api/v1"
 	"github.com/bolindalabs/cortex-alert-operator/controllers"
+	"github.com/bolindalabs/cortex-alert-operator/controllers/cortex"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -52,11 +53,17 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var cortexURL string
+	var cortexUser string
+	var cortexToken string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&cortexURL, "cortex-url", "", "Cortex API Endpoint.")
+	flag.StringVar(&cortexUser, "cortex-user", "", "Cortex API Username.")
+	flag.StringVar(&cortexToken, "cortex-token", "", "Cortex API Token.")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -78,10 +85,26 @@ func main() {
 		os.Exit(1)
 	}
 
+	var newCortex *cortex.Client
+	{
+		c := cortex.Config{
+			Key:             cortexToken,
+			Address:         cortexURL,
+			ID:              cortexUser,
+			UseLegacyRoutes: false,
+		}
+		newCortex, err = cortex.New(c)
+		if err != nil {
+			setupLog.Error(err, "unable to create Cotex client")
+			os.Exit(1)
+		}
+	}
+
 	if err = (&controllers.PrometheusRuleReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("PrometheusRule"),
 		Scheme: mgr.GetScheme(),
+		Cortex: newCortex,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PrometheusRule")
 		os.Exit(1)
