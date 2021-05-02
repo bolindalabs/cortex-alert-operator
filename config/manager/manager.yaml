@@ -26,10 +26,10 @@ spec:
         runAsNonRoot: true
       containers:
       - command:
-        - /manager
+        - /cortex-alert-operator
         args:
         - --leader-elect
-        image: controller:latest
+        image: public.ecr.aws/bolindalabs/cortex-alert-operator:latest
         name: manager
         securityContext:
           allowPrivilegeEscalation: false
