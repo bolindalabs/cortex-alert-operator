@@ -21,6 +21,12 @@ rules:
 - apiGroups:
   - monitoring.bolinda.digital
   resources:
+  - prometheusrules/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.bolinda.digital
+  resources:
   - prometheusrules/status
   verbs:
   - get
